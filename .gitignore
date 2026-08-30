@@ -1,0 +1,8 @@
+build/
+out/
+.cache/
+__pycache__/
+*.py[cod]
+*.ncu-rep
+*.nsys-rep
+

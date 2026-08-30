@@ -1,0 +1,31 @@
+name: CUDA
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: nvidia/cuda:13.0.0-devel-ubuntu22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build tools
+        run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake ninja-build
+      - name: Compile CUDA library and tools
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCUDA_OPS_CUDA_ARCHITECTURES=80 && cmake --build build --parallel
+
+  gpu-test:
+    # Attach a self-hosted runner with an NVIDIA GPU and NVIDIA Container Toolkit.
+    if: github.repository_owner == 'YOUR_ORGANIZATION'
+    runs-on: [self-hosted, linux, gpu]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure, test, and benchmark
+        run: |
+          cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCUDA_OPS_CUDA_ARCHITECTURES=native
+          cmake --build build --parallel
+          ctest --test-dir build --output-on-failure
+          ./build/rmsnorm_bench --rows 4096 --cols 4096 --iterations 300
+
