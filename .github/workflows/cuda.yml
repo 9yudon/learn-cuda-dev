@@ -8,9 +8,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: nvidia/cuda:13.0.0-devel-ubuntu22.04
+    # Ubuntu 24.04 provides CMake 3.28, satisfying the project's 3.26 minimum.
+    container: nvidia/cuda:13.0.0-devel-ubuntu24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install build tools
         run: apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential cmake ninja-build
       - name: Compile CUDA library and tools
@@ -21,11 +22,10 @@ jobs:
     if: github.repository_owner == 'YOUR_ORGANIZATION'
     runs-on: [self-hosted, linux, gpu]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Configure, test, and benchmark
         run: |
           cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCUDA_OPS_CUDA_ARCHITECTURES=native
           cmake --build build --parallel
           ctest --test-dir build --output-on-failure
           ./build/rmsnorm_bench --rows 4096 --cols 4096 --iterations 300
-
